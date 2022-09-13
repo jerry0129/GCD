@@ -52,29 +52,33 @@ parameter [1:0] FINISH = 2'b10;
         state <= IDLE;
         ERROR <= 0;
     end else  begin
-        state <= state_next;
         ERROR <= error_next;
+        state <= state_next;
     end
  end
- 
- always@(*)begin
+ always@(posedge CLK)begin
+    if(START)begin
+        reg_a <= A;
+        reg_b <= B;
+    end else begin
+        reg_a <= diff;
+        reg_b <= data_b;
+    end
+ end
+ always@(state, posedge START, reg_a, reg_b, found, ERROR)begin
     DONE = 0;
-    Y = 0;
     case(state)
     IDLE: begin
         if(START)begin
-            if(swap)begin
-                reg_a = B;
-                reg_b = A;
-            end else begin
-                reg_a = A;
-                reg_b = B;
-            end
             state_next = CALC;
-            error_next = reg_a == 0 | reg_b == 0;
+            if(reg_a == 0 || reg_b == 0)
+                error_next = 1;
+            else
+                error_next = 0;
+            //error_next = (reg_a == 0 | reg_b == 0);
         end else begin
-            state_next = IDLE;
-            error_next = 0;
+            state_next = state;
+            error_next = ERROR;
         end
     end
     CALC: begin
@@ -82,24 +86,37 @@ parameter [1:0] FINISH = 2'b10;
         if(found || ERROR)begin
             state_next = FINISH;
         end else begin
-            state_next = CALC;
-            diff = reg_a%reg_b;
-            reg_a = reg_b;
-            reg_b = diff;    
+            state_next = CALC; 
         end
     end
     FINISH: begin
         state_next = IDLE;
         error_next = 0;
-        if(!ERROR)
-           Y = reg_a;
         DONE = 1;
     end
     endcase
  end
 
-assign swap = (A < B)? 1 : 0;
-assign found = (reg_b == 0 && !ERROR)? 1 : 0;       
+ always@(*)begin
+    if(swap)begin
+        data_a = reg_b;
+        data_b = reg_a;
+    end else begin
+        data_a = reg_a;
+        data_b = reg_b;
+    end
+ end
+ always@(posedge CLK)begin
+    if(found)
+        Y = data_a;
+    else
+        Y = 0;
+ end
+ always@(*)begin
+    diff = data_a -data_b;
+ end
+assign swap = (reg_b > reg_a)? 1 : 0;
+assign found = (reg_a == reg_b || A == B)? 1 : 0;       
  
             
 endmodule

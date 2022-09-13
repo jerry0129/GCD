@@ -68,20 +68,20 @@ module gcd_tb;
         @(posedge done)
         
         //#(cyc) nop;
-        #(delay)
+        //#(delay)
         #(cyc) load; data_in(8'd5, 8'd15);
         #(cyc) nop;
         @(posedge done)
         
         //#(cyc) nop;
-        #(delay)
+        //#(delay)
         #(cyc) load; data_in(8'd0, 8'd15);
         #(cyc) nop;
         @(posedge done)
         
         
         //#(cyc) nop;
-        #(delay)
+        //#(delay)
         #(cyc) load; data_in(8'd17, 8'd0);
         #(cyc) nop;
         @(posedge done)
